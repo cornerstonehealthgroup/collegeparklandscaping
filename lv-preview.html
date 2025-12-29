@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Landscape Vision Tool | College Park Landscaping</title>
+<meta name="description" content="Visualize your landscape transformation before we start. Upload a photo and see what's possible.">
+<meta name="robots" content="noindex, nofollow">
+<style>
+* {
+margin: 0;
+padding: 0;
+box-sizing: border-box;
+}
+
+```
+body {
+font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+</style>
+```
+
+</head>
+<body>
+<div id="root"></div>
+
+```
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<script type="text/babel">
+const { useState, useRef } = React;
+const { Upload, Loader, CheckCircle, AlertCircle, Image: ImageIcon, Sparkles } = lucide;
+
+const LandscapeVisualizer = () => {
+const [step, setStep] = useState(1);
+const [uploadedImage, setUploadedImage] = useState(null);
+const [imagePreview, setImagePreview] = useState(null);
+const [description, setDescription] = useState('');
+const [contactInfo, setContactInfo] = useState({ name: '', email: '', phone: '', address: '' });
+const [isProcessing, setIsProcessing] = useState(false);
+const [renderedImage, setRenderedImage] = useState(null);
+const [error, setError] = useState('');
+const fileInputRef = useRef(null);
+
+const handleImageUpload = (e) => {
+const file = e.target.files[0];
+if (file) {
+if (file.size > 10 * 1024 * 1024) {
+setError('Image must be less than 10MB');
+return;
+}
+setUploadedImage(file);
+const reader = new FileReader();
+reader.onload = (e) => {
+setImagePreview(e.target.result);
+setStep(2);
+setError('');
+};
+reader.readAsDataURL(file);
+}
+};
+
+const handleDescriptionSubmit = () => {
+if (description.trim().length < 10) {
+setError('Please provide more detail about what you envision (at least 10 characters)');
+return;
+}
+setStep(3);
+setError('');
+};
+
+const handleContactSubmit = async () => {
+if (!contactInfo.name || !contactInfo.phone || !contactInfo.address) {
+setError('Please fill in all required fields');
+return;
+}
+
+setStep(4);
+setIsProcessing(true);
+setError('');
+
+try {
+const reader = new FileReader();
+reader.onload = async (e) => {
+const base64Image = e.target.result.split(',')[1];
+
+const response = await fetch('https://api.anthropic.com/v1/messages', {
+method: 'POST',
+headers: {
+'Content-Type': 'application/json',
+},
+body: JSON.stringify({
+model: 'claude-sonnet-4-20250514',
+max_tokens: 1000,
+messages: [{
+role: 'user',
+content: [
+{
+type: 'image',
+source: {
+type: 'base64',
+media_type: uploadedImage.type,
+data: base64Image
+}
+},
+{
+type: 'text',
+text: `You are a professional landscape designer for College Park Landscaping in Central Florida. Analyze this yard photo and provide a detailed, realistic visualization description based on the homeowner's request: "${description}"
+```
+
+Provide a comprehensive, vivid description of the transformed landscape that includes:
+
+**Plant Selection & Placement:**
+
+- Specific plant names suitable for Central Florida (USDA Zone 9a/9b)
+- Where each plant type would be positioned and why
+- Expected mature sizes and growth patterns
+- Color schemes and seasonal interest
+- Native plants where appropriate for low maintenance
+
+**Hardscaping Elements:**
+
+- Pathways, borders, edging materials (specify types: river rock, pavers, mulch, etc.)
+- Any structural features like raised beds, retaining walls, or borders
+- Practical considerations for drainage and foot traffic
+
+**Layout & Design:**
+
+- Spatial arrangement and flow
+- Focal points and visual hierarchy
+- How the design complements the existing structure/architecture
+- Proportion and scale considerations
+
+**Practical Details:**
+
+- Estimated timeline to mature appearance
+- Maintenance requirements (frequency of pruning, watering needs, etc.)
+- Irrigation recommendations
+- Approximate budget range for materials and installation
+
+**Seasonal Considerations:**
+
+- How the landscape will look across Florida’s seasons
+- Heat and humidity tolerance
+- Hurricane/storm resilience
+
+Write this as if you’re walking the homeowner through their transformed yard, helping them truly visualize the end result. Be specific about plants (e.g., “Coontie palms along the front border” not just “some palms”). Make it personal and actionable.
+
+Format the response in clear sections with the headers listed above for easy reading.`
+}
+]
+}]
+})
+});
+
+```
+const data = await response.json();
+const visualizationText = data.content.find(c => c.type === 'text')?.text || 'Unable to generate visualization. Please try again.';
+
+setRenderedImage(visualizationText);
+setIsProcessing(false);
+setStep(5);
+};
+reader.readAsDataURL(uploadedImage);
+
+} catch (err) {
+console.error('Error:', err);
+setError('Failed to generate visualization. Please try again.');
+setIsProcessing(false);
+setStep(3);
+}
+};
+
+const resetTool = () => {
+setStep(1);
+setUploadedImage(null);
+setImagePreview(null);
+setDescription('');
+setContactInfo({ name: '', email: '', phone: '', address: '' });
+setRenderedImage(null);
+setError('');
+};
+
+return (
+<div style={styles.container}>
+<div style={styles.background}>
+<div style={styles.grain}></div>
+</div>
+
+<div style={styles.header}>
+<div style={styles.logoContainer}>
+<Sparkles size={24} style={styles.logoIcon} />
+<h1 style={styles.logo}>Landscape Vision Tool</h1>
+</div>
+<p style={styles.tagline}>See your yard's potential before we break ground</p>
+</div>
+
+<div style={styles.content}>
+<div style={styles.progressContainer}>
+<div style={{...styles.progressStep, ...(step >= 1 ? styles.progressStepActive : {})}}>
+<div style={styles.progressNumber}>1</div>
+<span style={styles.progressLabel}>Upload</span>
+</div>
+<div style={styles.progressLine}></div>
+<div style={{...styles.progressStep, ...(step >= 2 ? styles.progressStepActive : {})}}>
+<div style={styles.progressNumber}>2</div>
+<span style={styles.progressLabel}>Describe</span>
+</div>
+<div style={styles.progressLine}></div>
+<div style={{...styles.progressStep, ...(step >= 3 ? styles.progressStepActive : {})}}>
+<div style={styles.progressNumber}>3</div>
+<span style={styles.progressLabel}>Contact</span>
+</div>
+<div style={styles.progressLine}></div>
+<div style={{...styles.progressStep, ...(step >= 5 ? styles.progressStepActive : {})}}>
+<div style={styles.progressNumber}>4</div>
+<span style={styles.progressLabel}>Visualize</span>
+</div>
+</div>
+
+{error && (
+<div style={styles.errorBanner}>
+<AlertCircle size={20} />
+<span>{error}</span>
+</div>
+)}
+
+{step === 1 && (
+<div style={styles.card}>
+<div style={styles.uploadContainer}>
+<input
+ref={fileInputRef}
+type="file"
+accept="image/*"
+onChange={handleImageUpload}
+style={styles.hiddenInput}
+/>
+<div 
+style={styles.uploadBox}
+onClick={() => fileInputRef.current?.click()}
+>
+<Upload size={48} style={styles.uploadIcon} />
+<h2 style={styles.uploadTitle}>Upload Your Yard Photo</h2>
+<p style={styles.uploadText}>
+Take a photo of the area you want to transform. 
+<br />Front yard, backyard, side yard - anywhere you envision improvement.
+</p>
+<button style={styles.uploadButton}>Choose Photo</button>
+<p style={styles.uploadHint}>JPG, PNG, or HEIC • Max 10MB</p>
+</div>
+</div>
+</div>
+)}
+
+{step === 2 && (
+<div style={styles.card}>
+<div style={styles.imagePreviewContainer}>
+<img src={imagePreview} alt="Your yard" style={styles.imagePreview} />
+</div>
+
+<div style={styles.section}>
+<h2 style={styles.sectionTitle}>What's Your Vision?</h2>
+<p style={styles.sectionText}>
+Describe what you'd like to see in this space. Be as specific or general as you'd like.
+</p>
+
+<div style={styles.examplesGrid}>
+<div 
+style={styles.exampleChip} 
+onClick={() => setDescription('Add colorful flower beds and a curved walkway with natural stone')}
+>
+"Add colorful flower beds and a curved walkway"
+</div>
+<div 
+style={styles.exampleChip} 
+onClick={() => setDescription('Create a low-maintenance native plant garden with mulch beds')}
+>
+"Low-maintenance native plants with mulch beds"
+</div>
+<div 
+style={styles.exampleChip} 
+onClick={() => setDescription('Install raised garden beds and a small patio area')}
+>
+"Raised garden beds and patio area"
+</div>
+<div 
+style={styles.exampleChip} 
+onClick={() => setDescription('Transform this into a tropical paradise with palm trees')}
+>
+"Tropical paradise with palms"
+</div>
+</div>
+
+<textarea
+value={description}
+onChange={(e) => setDescription(e.target.value)}
+placeholder="Example: I want to add native Florida plants along the fence line, create a curved border with river rock, and add some color with seasonal flowers..."
+style={styles.textarea}
+/>
+
+<div style={styles.buttonGroup}>
+<button onClick={() => setStep(1)} style={styles.secondaryButton}>
+← Back
+</button>
+<button onClick={handleDescriptionSubmit} style={styles.primaryButton}>
+Continue →
+</button>
+</div>
+</div>
+</div>
+)}
+
+{step === 3 && (
+<div style={styles.card}>
+<div style={styles.section}>
+<h2 style={styles.sectionTitle}>Almost There</h2>
+<p style={styles.sectionText}>
+I'll generate your visualization and send it to you within 24 hours.
+This also helps me prepare an accurate quote for your project.
+</p>
+
+<div style={styles.formGrid}>
+<div style={styles.formGroup}>
+<label style={styles.label}>Your Name *</label>
+<input
+type="text"
+value={contactInfo.name}
+onChange={(e) => setContactInfo({...contactInfo, name: e.target.value})}
+style={styles.input}
+placeholder="John Smith"
+/>
+</div>
+
+<div style={styles.formGroup}>
+<label style={styles.label}>Phone Number *</label>
+<input
+type="tel"
+value={contactInfo.phone}
+onChange={(e) => setContactInfo({...contactInfo, phone: e.target.value})}
+style={styles.input}
+placeholder="(407) 555-0123"
+/>
+</div>
+
+<div style={styles.formGroup}>
+<label style={styles.label}>Email Address</label>
+<input
+type="email"
+value={contactInfo.email}
+onChange={(e) => setContactInfo({...contactInfo, email: e.target.value})}
+style={styles.input}
+placeholder="john@email.com"
+/>
+</div>
+
+<div style={styles.formGroup}>
+<label style={styles.label}>Property Address *</label>
+<input
+type="text"
+value={contactInfo.address}
+onChange={(e) => setContactInfo({...contactInfo, address: e.target.value})}
+style={styles.input}
+placeholder="123 Main St, College Park, FL"
+/>
+</div>
+</div>
+
+<div style={styles.privacyNote}>
+<p>Your information is kept confidential and used only to provide your visualization and quote.</p>
+</div>
+
+<div style={styles.buttonGroup}>
+<button onClick={() => setStep(2)} style={styles.secondaryButton}>
+← Back
+</button>
+<button onClick={handleContactSubmit} style={styles.primaryButton}>
+Generate Visualization
+</button>
+</div>
+</div>
+</div>
+)}
+
+{step === 4 && (
+<div style={styles.card}>
+<div style={styles.processingContainer}>
+<Loader size={64} style={styles.spinner} />
+<h2 style={styles.processingTitle}>Creating Your Visualization</h2>
+<p style={styles.processingText}>
+Analyzing your space and designing a tailored landscape plan...
+</p>
+<div style={styles.processingSteps}>
+<div style={styles.processingStep}>✓ Image analyzed</div>
+<div style={styles.processingStep}>✓ Climate considerations applied</div>
+<div style={styles.processingStep}>⟳ Generating design...</div>
+</div>
+</div>
+</div>
+)}
+
+{step === 5 && (
+<div style={styles.card}>
+<div style={styles.successBanner}>
+<CheckCircle size={24} />
+<span>Visualization Complete!</span>
+</div>
+
+<div style={styles.resultContainer}>
+<div style={styles.imagePreviewContainer}>
+<img src={imagePreview} alt="Original yard" style={styles.resultImage} />
+<div style={styles.imageLabel}>Your Current Yard</div>
+</div>
+
+<div style={styles.visualizationSection}>
+<h2 style={styles.visualizationTitle}>Your Transformed Landscape</h2>
+<div style={styles.visualizationText}>
+{renderedImage}
+</div>
+</div>
+
+<div style={styles.nextStepsSection}>
+<h3 style={styles.nextStepsTitle}>What's Next?</h3>
+<div style={styles.nextStepsList}>
+<div style={styles.nextStepItem}>
+<div style={styles.nextStepNumber}>1</div>
+<div>
+<strong>I'll reach out within 24 hours</strong> to discuss your vision, answer questions, and schedule a free on-site consultation.
+</div>
+</div>
+<div style={styles.nextStepItem}>
+<div style={styles.nextStepNumber}>2</div>
+<div>
+<strong>Free property visit</strong> where I'll take measurements, assess soil and drainage, and refine the design.
+</div>
+</div>
+<div style={styles.nextStepItem}>
+<div style={styles.nextStepNumber}>3</div>
+<div>
+<strong>Detailed quote</strong> with transparent pricing, timeline, and maintenance recommendations.
+</div>
+</div>
+</div>
+
+<div style={styles.contactCallout}>
+<p style={styles.contactCalloutText}>
+<strong>Want to discuss this right now?</strong>
+<br />Call or text me directly: <a href="tel:+14076150597" style={styles.phoneLink}>(407) 615-0597</a>
+</p>
+</div>
+</div>
+
+<button onClick={resetTool} style={styles.resetButton}>
+Create Another Visualization
+</button>
+</div>
+</div>
+)}
+</div>
+
+<footer style={styles.footer}>
+<p style={styles.footerText}>
+College Park Landscaping • Your Neighborhood Landscaper
+<br />
+<a href="tel:+14076150597" style={styles.footerLink}>(407) 615-0597</a> • 
+<a href="mailto:collegeparklandscaping@gmail.com" style={styles.footerLink}> collegeparklandscaping@gmail.com</a>
+</p>
+</footer>
+</div>
+);
+};
+
+const styles = {
+container: {
+minHeight: '100vh',
+backgroundColor: '#0a0a0a',
+color: '#e8e8e8',
+fontFamily: "'EB Garamond', serif",
+position: 'relative',
+},
+background: {
+position: 'fixed',
+top: 0,
+left: 0,
+right: 0,
+bottom: 0,
+background: 'radial-gradient(circle at 20% 50%, rgba(76, 110, 75, 0.15) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(139, 94, 60, 0.1) 0%, transparent 50%)',
+pointerEvents: 'none',
+zIndex: 0,
+},
+grain: {
+position: 'absolute',
+top: 0,
+left: 0,
+right: 0,
+bottom: 0,
+backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 400 400\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\' opacity=\'0.05\'/%3E%3C/svg%3E")',
+opacity: 0.5,
+},
+header: {
+position: 'relative',
+zIndex: 1,
+textAlign: 'center',
+padding: '48px 24px 24px',
+borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+},
+logoContainer: {
+display: 'flex',
+alignItems: 'center',
+justifyContent: 'center',
+gap: '12px',
+marginBottom: '12px',
+},
+logoIcon: {
+color: '#7fa97e',
+},
+logo: {
+fontSize: '32px',
+fontWeight: '400',
+letterSpacing: '0.5px',
+margin: 0,
+color: '#ffffff',
+},
+tagline: {
+fontSize: '16px',
+color: '#a0a0a0',
+fontFamily: "'Inter', sans-serif",
+fontWeight: '300',
+letterSpacing: '0.3px',
+},
+content: {
+position: 'relative',
+zIndex: 1,
+maxWidth: '900px',
+margin: '0 auto',
+padding: '48px 24px',
+},
+progressContainer: {
+display: 'flex',
+alignItems: 'center',
+justifyContent: 'center',
+marginBottom: '48px',
+gap: '0',
+flexWrap: 'wrap',
+},
+progressStep: {
+display: 'flex',
+flexDirection: 'column',
+alignItems: 'center',
+gap: '8px',
+opacity: 0.3,
+transition: 'opacity 0.3s ease',
+},
+progressStepActive: {
+opacity: 1,
+},
+progressNumber: {
+width: '40px',
+height: '40px',
+borderRadius: '50%',
+border: '2px solid rgba(255, 255, 255, 0.2)',
+display: 'flex',
+alignItems: 'center',
+justifyContent: 'center',
+fontFamily: "'Inter', sans-serif",
+fontSize: '16px',
+fontWeight: '500',
+backgroundColor: 'rgba(127, 169, 126, 0.1)',
+},
+progressLabel: {
+fontSize: '12px',
+fontFamily: "'Inter', sans-serif",
+textTransform: 'uppercase',
+letterSpacing: '1px',
+},
+progressLine: {
+width: '60px',
+height: '2px',
+backgroundColor: 'rgba(255, 255, 255, 0.1)',
+margin: '0 -10px',
+marginBottom: '28px',
+},
+card: {
+backgroundColor: 'rgba(20, 20, 20, 0.6)',
+backdropFilter: 'blur(10px)',
+border: '1px solid rgba(255, 255, 255, 0.08)',
+borderRadius: '12px',
+padding: '48px',
+boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+},
+uploadContainer: {
+textAlign: 'center',
+},
+hiddenInput: {
+display: 'none',
+},
+uploadBox: {
+border: '2px dashed rgba(127, 169, 126, 0.3)',
+borderRadius: '12px',
+padding: '64px 32px',
+cursor: 'pointer',
+transition: 'all 0.3s ease',
+backgroundColor: 'rgba(127, 169, 126, 0.02)',
+},
+uploadIcon: {
+color: '#7fa97e',
+marginBottom: '24px',
+},
+uploadTitle: {
+fontSize: '28px',
+marginBottom: '12px',
+fontWeight: '400',
+color: '#ffffff',
+},
+uploadText: {
+fontSize: '16px',
+color: '#a0a0a0',
+marginBottom: '32px',
+lineHeight: '1.6',
+fontFamily: "'Inter', sans-serif",
+},
+uploadButton: {
+backgroundColor: '#7fa97e',
+color: '#0a0a0a',
+border: 'none',
+borderRadius: '8px',
+padding: '16px 48px',
+fontSize: '16px',
+fontWeight: '500',
+fontFamily: "'Inter', sans-serif",
+cursor: 'pointer',
+transition: 'all 0.3s ease',
+},
+uploadHint: {
+fontSize: '13px',
+color: '#666',
+marginTop: '16px',
+fontFamily: "'Inter', sans-serif",
+},
+imagePreviewContainer: {
+marginBottom: '32px',
+borderRadius: '8px',
+overflow: 'hidden',
+border: '1px solid rgba(255, 255, 255, 0.08)',
+position: 'relative',
+},
+imagePreview: {
+width: '100%',
+height: 'auto',
+display: 'block',
+},
+imageLabel: {
+position: 'absolute',
+bottom: '12px',
+left: '12px',
+backgroundColor: 'rgba(0, 0, 0, 0.7)',
+padding: '8px 16px',
+borderRadius: '6px',
+fontSize: '13px',
+fontFamily: "'Inter', sans-serif",
+color: '#fff',
+},
+section: {
+marginTop: '0',
+},
+sectionTitle: {
+fontSize: '28px',
+marginBottom: '12px',
+fontWeight: '400',
+color: '#ffffff',
+},
+sectionText: {
+fontSize: '16px',
+color: '#a0a0a0',
+marginBottom: '32px',
+lineHeight: '1.6',
+fontFamily: "'Inter', sans-serif",
+},
+examplesGrid: {
+display: 'grid',
+gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+gap: '12px',
+marginBottom: '24px',
+},
+exampleChip: {
+padding: '12px 16px',
+backgroundColor: 'rgba(127, 169, 126, 0.08)',
+border: '1px solid rgba(127, 169, 126, 0.2)',
+borderRadius: '8px',
+fontSize: '13px',
+fontFamily: "'Inter', sans-serif",
+color: '#7fa97e',
+cursor: 'pointer',
+transition: 'all 0.2s ease',
+textAlign: 'center',
+},
+textarea: {
+width: '100%',
+minHeight: '140px',
+backgroundColor: 'rgba(30, 30, 30, 0.6)',
+border: '1px solid rgba(255, 255, 255, 0.1)',
+borderRadius: '8px',
+padding: '16px',
+fontSize: '15px',
+fontFamily: "'Inter', sans-serif",
+color: '#e8e8e8',
+resize: 'vertical',
+lineHeight: '1.6',
+},
+formGrid: {
+display: 'grid',
+gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+gap: '24px',
+marginBottom: '24px',
+},
+formGroup: {
+display: 'flex',
+flexDirection: 'column',
+gap: '8px',
+},
+label: {
+fontSize: '13px',
+fontFamily: "'Inter', sans-serif",
+color: '#a0a0a0',
+textTransform: 'uppercase',
+letterSpacing: '0.5px',
+fontWeight: '500',
+},
+input: {
+backgroundColor: 'rgba(30, 30, 30, 0.6)',
+border: '1px solid rgba(255, 255, 255, 0.1)',
+borderRadius: '8px',
+padding: '14px 16px',
+fontSize: '15px',
+fontFamily: "'Inter', sans-serif",
+color: '#e8e8e8',
+},
+privacyNote: {
+backgroundColor: 'rgba(127, 169, 126, 0.05)',
+border: '1px solid rgba(127, 169, 126, 0.15)',
+borderRadius: '8px',
+padding: '16px',
+marginBottom: '32px',
+fontSize: '13px',
+fontFamily: "'Inter', sans-serif",
+color: '#a0a0a0',
+textAlign: 'center',
+},
+buttonGroup: {
+display: 'flex',
+gap: '16px',
+justifyContent: 'space-between',
+},
+primaryButton: {
+flex: 1,
+backgroundColor: '#7fa97e',
+color: '#0a0a0a',
+border: 'none',
+borderRadius: '8px',
+padding: '16px 32px',
+fontSize: '16px',
+fontWeight: '500',
+fontFamily: "'Inter', sans-serif",
+cursor: 'pointer',
+transition: 'all 0.3s ease',
+},
+secondaryButton: {
+flex: 1,
+backgroundColor: 'transparent',
+color: '#a0a0a0',
+border: '1px solid rgba(255, 255, 255, 0.2)',
+borderRadius: '8px',
+padding: '16px 32px',
+fontSize: '16px',
+fontWeight: '500',
+fontFamily: "'Inter', sans-serif",
+cursor: 'pointer',
+transition: 'all 0.3s ease',
+},
+processingContainer: {
+textAlign: 'center',
+padding: '64px 32px',
+},
+spinner: {
+color: '#7fa97e',
+marginBottom: '24px',
+animation: 'spin 1s linear infinite',
+},
+processingTitle: {
+fontSize: '28px',
+marginBottom: '12px',
+fontWeight: '400',
+color: '#ffffff',
+},
+processingText: {
+fontSize: '16px',
+color: '#a0a0a0',
+marginBottom: '32px',
+fontFamily: "'Inter', sans-serif",
+},
+processingSteps: {
+display: 'flex',
+flexDirection: 'column',
+gap: '12px',
+alignItems: 'center',
+},
+processingStep: {
+fontSize: '14px',
+fontFamily: "'Inter', sans-serif",
+color: '#7fa97e',
+},
+successBanner: {
+backgroundColor: 'rgba(127, 169, 126, 0.15)',
+border: '1px solid rgba(127, 169, 126, 0.3)',
+borderRadius: '8px',
+padding: '16px 24px',
+marginBottom: '32px',
+display: 'flex',
+alignItems: 'center',
+gap: '12px',
+color: '#7fa97e',
+fontFamily: "'Inter', sans-serif",
+fontWeight: '500',
+},
+errorBanner: {
+backgroundColor: 'rgba(220, 38, 38, 0.15)',
+border: '1px solid rgba(220, 38, 38, 0.3)',
+borderRadius: '8px',
+padding: '16px 24px',
+marginBottom: '32px',
+display: 'flex',
+alignItems: 'center',
+gap: '12px',
+color: '#ef4444',
+fontFamily: "'Inter', sans-serif",
+},
+resultContainer: {
+display: 'flex',
+flexDirection: 'column',
+gap: '32px',
+},
+resultImage: {
+width: '100%',
+height: 'auto',
+display: 'block',
+},
+visualizationSection: {
+backgroundColor: 'rgba(30, 30, 30, 0.4)',
+border: '1px solid rgba(127, 169, 126, 0.2)',
+borderRadius: '8px',
+padding: '32px',
+},
+visualizationTitle: {
+fontSize: '24px',
+marginBottom: '20px',
+fontWeight: '400',
+color: '#7fa97e',
+},
+visualizationText: {
+fontSize: '16px',
+lineHeight: '1.8',
+color: '#d0d0d0',
+fontFamily: "'Inter', sans-serif",
+whiteSpace: 'pre-wrap',
+},
+nextStepsSection: {
+backgroundColor: 'rgba(30, 30, 30, 0.4)',
+border: '1px solid rgba(255, 255, 255, 0.1)',
+borderRadius: '8px',
+padding: '32px',
+},
+nextStepsTitle: {
+fontSize: '22px',
+marginBottom: '24px',
+fontWeight: '400',
+color: '#ffffff',
+},
+nextStepsList: {
+display: 'flex',
+flexDirection: 'column',
+gap: '20px',
+marginBottom: '32px',
+},
+nextStepItem: {
+display: 'flex',
+gap: '16px',
+fontFamily: "'Inter', sans-serif",
+fontSize: '15px',
+lineHeight: '1.6',
+color: '#d0d0d0',
+},
+nextStepNumber: {
+width: '32px',
+height: '32px',
+borderRadius: '50%',
+backgroundColor: 'rgba(127, 169, 126, 0.2)',
+border: '1px solid rgba(127, 169, 126, 0.3)',
+display: 'flex',
+alignItems: 'center',
+justifyContent: 'center',
+flexShrink: 0,
+fontSize: '14px',
+fontWeight: '600',
+color: '#7fa97e',
+},
+contactCallout: {
+backgroundColor: 'rgba(127, 169, 126, 0.08)',
+border: '1px solid rgba(127, 169, 126, 0.2)',
+borderRadius: '8px',
+padding: '24px',
+textAlign: 'center',
+},
+contactCalloutText: {
+fontFamily: "'Inter', sans-serif",
+fontSize: '15px',
+lineHeight: '1.6',
+color: '#d0d0d0',
+margin: 0,
+},
+phoneLink: {
+color: '#7fa97e',
+textDecoration: 'none',
+fontWeight: '600',
+},
+resetButton: {
+width: '100%',
+backgroundColor: 'transparent',
+color: '#a0a0a0',
+border: '1px solid rgba(255, 255, 255, 0.2)',
+borderRadius: '8px',
+padding: '16px 32px',
+fontSize: '16px',
+fontWeight: '500',
+fontFamily: "'Inter', sans-serif",
+cursor: 'pointer',
+transition: 'all 0.3s ease',
+},
+footer: {
+position: 'relative',
+zIndex: 1,
+borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+padding: '32px 24px',
+textAlign: 'center',
+},
+footerText: {
+fontSize: '14px',
+color: '#666',
+fontFamily: "'Inter', sans-serif",
+lineHeight: '1.8',
+},
+footerLink: {
+color: '#7fa97e',
+textDecoration: 'none',
+marginLeft: '8px',
+},
+};
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<LandscapeVisualizer />);
+</script>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap');
+
+@keyframes spin {
+from { transform: rotate(0deg); }
+to { transform: rotate(360deg); }
+}
+
+button:hover {
+transform: translateY(-2px);
+box-shadow: 0 4px 12px rgba(127, 169, 126, 0.3);
+}
+
+input:focus, textarea:focus {
+outline: none;
+border-color: rgba(127, 169, 126, 0.5);
+}
+
+@media (max-width: 768px) {
+[style*="padding: '48px'"] {
+padding: 24px !important;
+}
+[style*="fontSize: '32px'"] {
+font-size: 24px !important;
+}
+[style*="progressLine"] {
+width: 40px !important;
+}
+}
+</style>
+```
+
+</body>
+</html>
