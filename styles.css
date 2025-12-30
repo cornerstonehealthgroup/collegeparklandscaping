@@ -635,50 +635,268 @@ body {
 
 /* Responsive */
 @media (max-width: 768px) {
+    .container {
+        padding: 0 20px;
+    }
+    
+    .nav-container {
+        padding: 0 20px;
+        height: 64px;
+    }
+    
+    .logo {
+        font-size: 18px;
+    }
+    
     .nav-links {
         display: none;
     }
     
+    .nav-cta {
+        padding: 8px 16px;
+        font-size: 13px;
+    }
+    
     .hero {
         grid-template-columns: 1fr;
-        padding: 60px 24px;
+        padding: 50px 20px;
+        gap: 40px;
+    }
+    
+    .hero-badge {
+        font-size: 12px;
+        padding: 6px 12px;
+        margin-bottom: 20px;
     }
     
     .hero-title {
-        font-size: 36px;
+        font-size: 32px;
+        margin-bottom: 20px;
+        line-height: 1.2;
     }
     
-    .hero-visual {
-        height: 300px;
-    }
-    
-    .stack-card {
-        width: 180px;
-        height: 140px;
-        padding: 20px;
-    }
-    
-    .card-icon {
-        font-size: 36px;
-    }
-    
-    .card-text {
-        font-size: 14px;
-    }
-    
-    .why-content {
-        grid-template-columns: 1fr;
-    }
-    
-    .services-grid {
-        grid-template-columns: 1fr;
+    .hero-subtitle {
+        font-size: 16px;
+        margin-bottom: 32px;
+        line-height: 1.6;
     }
     
     .hero-actions {
         flex-direction: column;
+        gap: 12px;
+    }
+    
+    .btn {
+        width: 100%;
+        text-align: center;
+        padding: 14px 24px;
+        font-size: 15px;
     }
     
     .btn-secondary {
         text-align: center;
+    }
+    
+    .hero-visual {
+        height: 280px;
+    }
+    
+    .stack-card {
+        width: 160px;
+        height: 120px;
+        padding: 16px;
+    }
+    
+    .card-icon {
+        font-size: 32px;
+    }
+    
+    .card-text {
+        font-size: 13px;
+    }
+    
+    .card-1 {
+        right: 30px;
+    }
+    
+    .card-2 {
+        right: 100px;
+    }
+    
+    .card-3 {
+        right: 50px;
+    }
+    
+    .services-preview {
+        padding: 60px 20px;
+    }
+    
+    .section-header h2 {
+        font-size: 32px;
+        margin-bottom: 10px;
+    }
+    
+    .section-header p {
+        font-size: 16px;
+    }
+    
+    .services-grid {
+        grid-template-columns: 1fr;
+        gap: 24px;
+        margin-bottom: 36px;
+    }
+    
+    .service-card {
+        padding: 28px 24px;
+    }
+    
+    .service-icon {
+        font-size: 40px;
+        margin-bottom: 16px;
+    }
+    
+    .service-card h3 {
+        font-size: 20px;
+        margin-bottom: 10px;
+    }
+    
+    .service-card p {
+        font-size: 15px;
+        margin-bottom: 16px;
+    }
+    
+    .service-price {
+        font-size: 14px;
+    }
+    
+    .why-local {
+        padding: 60px 20px;
+    }
+    
+    .why-content {
+        grid-template-columns: 1fr;
+        gap: 48px;
+    }
+    
+    .why-text h2 {
+        font-size: 28px;
+        margin-bottom: 20px;
+    }
+    
+    .why-text p {
+        font-size: 16px;
+        margin-bottom: 16px;
+        line-height: 1.7;
+    }
+    
+    .why-list li {
+        font-size: 15px;
+        padding: 10px 0;
+    }
+    
+    .map-placeholder {
+        width: 240px;
+        height: 240px;
+    }
+    
+    .map-marker {
+        font-size: 56px;
+    }
+    
+    .map-text {
+        font-size: 16px;
+    }
+    
+    .map-text strong {
+        font-size: 20px;
+    }
+    
+    .coverage-area {
+        padding: 60px 20px;
+    }
+    
+    .coverage-area h2 {
+        font-size: 28px;
+        margin-bottom: 14px;
+    }
+    
+    .coverage-intro {
+        font-size: 15px;
+        margin-bottom: 32px;
+    }
+    
+    .neighborhoods {
+        gap: 12px;
+        margin-bottom: 28px;
+    }
+    
+    .neighborhood-tag {
+        padding: 10px 18px;
+        font-size: 14px;
+    }
+    
+    .coverage-note {
+        font-size: 14px;
+    }
+    
+    .cta-section {
+        padding: 60px 20px;
+    }
+    
+    .cta-box {
+        padding: 48px 28px;
+        border-radius: 18px;
+    }
+    
+    .cta-box h2 {
+        font-size: 28px;
+        margin-bottom: 14px;
+    }
+    
+    .cta-box p {
+        font-size: 16px;
+        margin-bottom: 28px;
+    }
+    
+    .cta-actions {
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .btn-large {
+        padding: 16px 32px;
+        font-size: 18px;
+        width: 100%;
+    }
+    
+    .btn-secondary-large {
+        padding: 16px 32px;
+        font-size: 16px;
+        width: 100%;
+    }
+    
+    .footer {
+        padding: 48px 20px 24px;
+    }
+    
+    .footer-content {
+        grid-template-columns: 1fr;
+        gap: 32px;
+        margin-bottom: 32px;
+    }
+    
+    .footer-col h3 {
+        font-size: 20px;
+        margin-bottom: 14px;
+    }
+    
+    .footer-col h4 {
+        font-size: 15px;
+        margin-bottom: 12px;
+    }
+    
+    .footer-bottom {
+        padding-top: 24px;
+        font-size: 14px;
     }
 }
